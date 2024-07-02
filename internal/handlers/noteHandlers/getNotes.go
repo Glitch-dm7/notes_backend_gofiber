@@ -22,7 +22,6 @@ func GetNotes(c *fiber.Ctx) error {
 	notes := &[]model.Note{}
 	err := db.Find(notes).Error
 
-	
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{
