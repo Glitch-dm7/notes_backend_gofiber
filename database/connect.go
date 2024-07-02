@@ -13,10 +13,14 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Config("DB_HOST"), config.Config("DB_PORT"), config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_NAME"), config.Config("DB_SSLMODE"),
-	)
+	// connection for db creds
+	// dsn := fmt.Sprintf(
+	// 	"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	// 	config.Config("DB_HOST"), config.Config("DB_PORT"), config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_NAME"), config.Config("DB_SSLMODE"),
+	// )
+
+	// connection for db url
+	dsn := config.Config("DB_URL")
 
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})

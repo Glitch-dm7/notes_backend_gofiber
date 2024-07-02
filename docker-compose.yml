@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=postgresql://notes_db_r711_user:qy4uaOeYkyOooOMxuzcUHtpaR66Y6HY4@dpg-cq21edrv2p9s73daqsq0-a.singapore-postgres.render.com/notes_db_r711
