@@ -31,6 +31,6 @@ func ConnectDB() {
 	if err != nil {
 		fmt.Println("Error occured while migrating", err)
 	} else {
-		fmt.Println("Migrates Notes model successfully")
+		fmt.Println("Migrated Notes model successfully")
 	}
 }

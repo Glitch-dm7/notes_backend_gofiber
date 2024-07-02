@@ -22,26 +22,27 @@ func GetNotes(c *fiber.Ctx) error {
 	notes := &[]model.Note{}
 	err := db.Find(notes).Error
 
-	if len(*notes) == 0 {
-		return c.Status(404).JSON(
-			&fiber.Map{
-				"message": "No notes found",
-				"date" : notes,
-			})
-	}
-
+	
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{
 				"message": "some issue occured",
 				"error": err,
 			})
-		return err
+			return err
+	}
+		
+	if len(*notes) == 0 {
+		return c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{
+				"message": "No notes found",
+				"data" : notes,
+			})
 	}
 
 	c.Status(http.StatusOK).JSON(
 		&fiber.Map{
-			"message": "notes found",
+			"message": "Notes found",
 			"data": notes,
 		})
 	return nil
