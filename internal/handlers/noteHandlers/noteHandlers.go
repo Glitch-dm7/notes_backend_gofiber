@@ -97,3 +97,35 @@ func CreateNotes(c *fiber.Ctx) error {
 		"data" : note,
 	})
 }
+
+// Handler for getting a single note
+func GetNote(c *fiber.Ctx) error {
+	db := database.DB
+	note := &model.Note{}
+
+	id := c.Params("id")
+
+	err := db.Find(note, "id = ?", id).Error
+	if err!=nil {
+		c.Status(http.StatusInternalServerError).JSON(
+			&fiber.Map{
+				"message" : "getting some issue fetching the notes",
+				"error" : err,
+		})
+		return err
+	}
+
+	if note.ID == uuid.Nil{
+		return c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{
+				"message" : "no note present",
+				"data" : nil,	
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(
+		&fiber.Map{
+			"message" : "note found with the id",
+			"data" : note,
+	})
+}
