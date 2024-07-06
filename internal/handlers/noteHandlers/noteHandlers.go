@@ -129,3 +129,45 @@ func GetNote(c *fiber.Ctx) error {
 			"data" : note,
 	})
 }
+
+// Handler for updating a note
+func UpdateNote(c *fiber.Ctx) error {
+	type UpdateNote struct {
+		Title			string	`json:"title"`
+		Subtitle	string	`json:"subtitle"`
+		Text			string	`json:"text"`
+	}
+	db := database.DB
+	note := &model.Note{}
+
+	id := c.Params("id")
+
+	db.Find(note, "id = ?", id)
+
+	if note.ID == uuid.Nil{
+		return c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{
+				"message" : "No note found with this id",
+		})
+	}
+
+	updateNote := &UpdateNote{}
+	err := c.BodyParser(updateNote)
+	if err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(&fiber.Map{
+			"message" : "Review your intput",
+			"data" : err,
+		})
+	}
+
+	note.Title = updateNote.Title
+	note.Subtitle = updateNote.Subtitle
+	note.Text = updateNote.Text
+
+	db.Save(note)
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message" : "Updated note successfully",
+		"data" : note,
+	})
+}
