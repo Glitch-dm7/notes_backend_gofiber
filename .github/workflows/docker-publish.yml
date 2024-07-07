@@ -3,7 +3,7 @@ name: CI/CD for Docker
 on:
   push:
     branches:
-      - main  # Change to your default branch
+      - main
 
 jobs:
   build:
@@ -31,3 +31,6 @@ jobs:
 
     - name: Logout from DockerHub
       run: docker logout
+    
+    - name: Trigger Render Deploy
+      run: curl -X POST https://api.render.com/deploy/srv-cq575908fa8c7382fq3g?key=iqtakhmwpHo
