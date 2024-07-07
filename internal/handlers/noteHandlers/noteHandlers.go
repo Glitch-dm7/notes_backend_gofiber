@@ -172,6 +172,7 @@ func UpdateNote(c *fiber.Ctx) error {
 	})
 }
 
+// Handler for deleting a note
 func DeleteNote(c *fiber.Ctx) error {
 	db := database.DB
 	note := &model.Note{}
