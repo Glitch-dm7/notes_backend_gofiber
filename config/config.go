@@ -8,11 +8,15 @@ import (
 )
 
 func Config(key string) string {
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	value := os.Getenv(key)
+	if value == "" {
+		// Load the .env file if the environment variable is not set
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Printf("Error loading .env file: %v", err)
+		}
+		// Get the value from the loaded .env file
+		value = os.Getenv(key)
 	}
-
-	return os.Getenv(key)
+	return value
 }
