@@ -171,3 +171,39 @@ func UpdateNote(c *fiber.Ctx) error {
 		"data" : note,
 	})
 }
+
+func DeleteNote(c *fiber.Ctx) error {
+	db := database.DB
+	note := &model.Note{}
+
+	id := c.Params("id")
+
+	err := db.Find(note, "id = ?", id).Error
+	if err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{
+				"message" : "Issue while finding note",
+				"error" : err,
+		})
+	}
+
+	if note.ID == uuid.Nil {
+		return c.Status(http.StatusNotFound).JSON(
+			&fiber.Map{
+				"message" : "no note found with this id",
+		})
+	}
+
+	err = db.Delete(note, "id = ?", id).Error
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{
+				"message" : "Failed to delete note",
+				"data" : err,
+			})
+	}
+
+	return c.Status(http.StatusOK).JSON(&fiber.Map{
+		"message" : "Delete note successfully",
+	})
+}
