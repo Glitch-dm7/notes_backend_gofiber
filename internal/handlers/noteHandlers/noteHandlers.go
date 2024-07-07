@@ -133,9 +133,9 @@ func GetNote(c *fiber.Ctx) error {
 // Handler for updating a note
 func UpdateNote(c *fiber.Ctx) error {
 	type UpdateNote struct {
-		Title			string	`json:"title"`
-		Subtitle	string	`json:"subtitle"`
-		Text			string	`json:"text"`
+		Title			*string	`json:"title"`  //using pointers to differentiate between missing and empty values
+		Subtitle	*string	`json:"subtitle"`
+		Text			*string	`json:"text"`
 	}
 	db := database.DB
 	note := &model.Note{}
@@ -160,9 +160,15 @@ func UpdateNote(c *fiber.Ctx) error {
 		})
 	}
 
-	note.Title = updateNote.Title
-	note.Subtitle = updateNote.Subtitle
-	note.Text = updateNote.Text
+	if updateNote.Title != nil {
+		note.Title = *updateNote.Title
+	}
+	if updateNote.Subtitle != nil {
+		note.Subtitle = *updateNote.Subtitle
+	}
+	if updateNote.Text != nil {
+		note.Text = *updateNote.Text
+	}
 
 	db.Save(note)
 
