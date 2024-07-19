@@ -1,4 +1,4 @@
-package middleware
+package authMiddleware
 
 import (
 	"notes_api/config"

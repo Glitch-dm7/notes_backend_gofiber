@@ -6,61 +6,38 @@ import (
 	"notes_api/internal/model"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
 
 // Handler for fetching notes
 func GetNotes(c *fiber.Ctx) error {
 	db := database.DB
-	
-	if db == nil {
-		return c.Status(http.StatusInternalServerError).JSON(
-			&fiber.Map{
-				"message" : "db is not initialized",
-				"log" : db,
-			})
-		}
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
 
 	notes := &[]model.Note{}
-	err := db.Order("updated_at desc").Find(notes).Error
+	err := db.Where("user_id = ?", userID).Order("updated_at desc").Find(notes).Error
 
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{
-				"message": "some issue occured",
-				"error": err,
-			})
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": "Failed to get notes"})
 		return err
 	}
-		
-	if len(*notes) == 0 {
-		return c.Status(http.StatusNotFound).JSON(
-			&fiber.Map{
-				"message": "No notes found",
-				"data" : notes,
-			})
-	}
 
-	return c.Status(http.StatusOK).JSON(
-		&fiber.Map{
-			"message": "Notes found",
-			"data": notes,
-		})
+	return c.Status(http.StatusOK).JSON(&fiber.Map{"data": notes})
 }
 
 // Handler for creating note
 func CreateNotes(c *fiber.Ctx) error {
 	db := database.DB
 	note := model.Note{}
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
 
-	err := c.BodyParser(&note)
-
-	if err!=nil {
-		c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{
-				"message" : "request failed, review your input",
-				"data" : err,
-			})
+	if err := c.BodyParser(&note); err!=nil {
+		c.Status(http.StatusUnprocessableEntity).JSON(&fiber.Map{"message" : "Invalid input"})
 		return err
 	}
 
@@ -81,14 +58,10 @@ func CreateNotes(c *fiber.Ctx) error {
 	}
 
 	note.ID = uuid.New()
+	note.UserID = uuid.MustParse(userID)
 
-	err = db.Create(&note).Error
-	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{
-				"message" : "could not create your note",
-				"data" : err,
-			})
+	if err := db.Create(&note).Error; err != nil {
+		c.Status(http.StatusBadRequest).JSON(&fiber.Map{"message" : "could not create your note"})
 		return err
 	}
 
