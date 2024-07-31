@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"notes_api/database"
 	"notes_api/router"
 
@@ -14,5 +15,5 @@ func main() {
 
 	router.SetupRoutes(app)
 
-	app.Listen(":8080")
+	log.Fatal(app.Listen(":8080"))
 }

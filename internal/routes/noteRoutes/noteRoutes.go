@@ -2,12 +2,13 @@ package noteRoutes
 
 import (
 	noteHandler "notes_api/internal/handlers/noteHandlers"
+	authMiddleware "notes_api/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupNoteRoutes(router fiber.Router){
-	note := router.Group("/note")
+	note := router.Group("/note", authMiddleware.JWTProtected())
 
 	// Get all notes
 	note.Get("/", noteHandler.GetNotes)
