@@ -75,15 +75,16 @@ func CreateNotes(c *fiber.Ctx) error {
 func GetNote(c *fiber.Ctx) error {
 	db := database.DB
 	note := &model.Note{}
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
 
 	id := c.Params("id")
-
-	err := db.Find(note, "id = ?", id).Error
+	err := db.Find(note, "id = ? AND user_id = ?", id, userID).Error
 	if err!=nil {
 		c.Status(http.StatusInternalServerError).JSON(
 			&fiber.Map{
 				"message" : "getting some issue fetching the notes",
-				"error" : err,
 		})
 		return err
 	}
@@ -91,16 +92,11 @@ func GetNote(c *fiber.Ctx) error {
 	if note.ID == uuid.Nil{
 		return c.Status(http.StatusNotFound).JSON(
 			&fiber.Map{
-				"message" : "no note present",
-				"data" : nil,	
+				"message" : "no note present with this id",
 		})
 	}
 
-	return c.Status(http.StatusOK).JSON(
-		&fiber.Map{
-			"message" : "note found with the id",
-			"data" : note,
-	})
+	return c.Status(http.StatusOK).JSON(&fiber.Map{"data" : note})
 }
 
 // Handler for updating a note
@@ -110,18 +106,17 @@ func UpdateNote(c *fiber.Ctx) error {
 		Subtitle	*string	`json:"subtitle"`
 		Text			*string	`json:"text"`
 	}
+	
 	db := database.DB
 	note := &model.Note{}
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
 
 	id := c.Params("id")
 
-	db.Find(note, "id = ?", id)
-
-	if note.ID == uuid.Nil{
-		return c.Status(http.StatusNotFound).JSON(
-			&fiber.Map{
-				"message" : "No note found with this id",
-		})
+	if err := db.First(note, "id = ? AND user_id = ?", id, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Note not found"})
 	}
 
 	updateNote := &UpdateNote{}
@@ -129,7 +124,6 @@ func UpdateNote(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(http.StatusUnprocessableEntity).JSON(&fiber.Map{
 			"message" : "Review your intput",
-			"data" : err,
 		})
 	}
 
@@ -143,7 +137,9 @@ func UpdateNote(c *fiber.Ctx) error {
 		note.Text = *updateNote.Text
 	}
 
-	db.Save(note)
+	if err := db.Save(note).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to update note"})
+	}
 
 	return c.Status(http.StatusOK).JSON(&fiber.Map{
 		"message" : "Updated note successfully",
@@ -155,35 +151,21 @@ func UpdateNote(c *fiber.Ctx) error {
 func DeleteNote(c *fiber.Ctx) error {
 	db := database.DB
 	note := &model.Note{}
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userID := claims["id"].(string)
 
 	id := c.Params("id")
 
-	err := db.Find(note, "id = ?", id).Error
-	if err != nil {
-		return c.Status(http.StatusUnprocessableEntity).JSON(
-			&fiber.Map{
-				"message" : "Issue while finding note",
-				"error" : err,
-		})
+	if err := db.First(note, "id = ? AND user_id = ?", id, userID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Note not found"})
 	}
 
-	if note.ID == uuid.Nil {
-		return c.Status(http.StatusNotFound).JSON(
-			&fiber.Map{
-				"message" : "no note found with this id",
-		})
-	}
-
-	err = db.Delete(note, "id = ?", id).Error
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(
-			&fiber.Map{
-				"message" : "Failed to delete note",
-				"data" : err,
-			})
+	if err := db.Delete(note).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to delete note"})
 	}
 
 	return c.Status(http.StatusOK).JSON(&fiber.Map{
-		"message" : "Delete note successfully",
+		"message" : "Deleted note successfully",
 	})
 }
