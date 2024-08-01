@@ -31,10 +31,10 @@ func ConnectDB() {
 		fmt.Println("Connected to database")
 	}
 
-	err = DB.AutoMigrate(&model.Note{})
+	err = DB.AutoMigrate(&model.User{}, &model.Note{})
 	if err != nil {
 		fmt.Println("Error occured while migrating", err)
 	} else {
-		fmt.Println("Migrated Notes model successfully")
+		fmt.Println("Migrated models successfully")
 	}
 }
