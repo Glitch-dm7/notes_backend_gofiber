@@ -18,9 +18,9 @@ func GetNotes(c *fiber.Ctx) error {
 	userID := claims["id"].(string)
 
 	notes := &[]model.Note{}
-	err := db.Where("user_id = ?", userID).Order("updated_at desc").Find(notes).Error
 
-	if err != nil {
+	// Fetch all the notes of the users in descending order
+	if err := db.Where("user_id = ?", userID).Order("updated_at desc").Find(notes).Error; err != nil {
 		c.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": "Failed to get notes"})
 		return err
 	}
@@ -36,17 +36,19 @@ func CreateNotes(c *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userID := claims["id"].(string)
 
+	// If mismatching fields in the body we return an error
 	if err := c.BodyParser(&note); err!=nil {
 		c.Status(http.StatusUnprocessableEntity).JSON(&fiber.Map{"message" : "Invalid input"})
 		return err
 	}
 
+	// Title and text are mandatory fields, without these fields in the body we throw an error
 	var missingFields []string
 	if note.Title == "" {
-		missingFields = append(missingFields, "Title")
+		missingFields = append(missingFields, "title")
 	}
 	if note.Text == "" {
-		missingFields = append(missingFields, "Text")
+		missingFields = append(missingFields, "text")
 	}
 
 	if len(missingFields) > 0{
@@ -57,6 +59,7 @@ func CreateNotes(c *fiber.Ctx) error {
 		})
 	}
 
+	// Create a new id of the note
 	note.ID = uuid.New()
 	note.UserID = uuid.MustParse(userID)
 
@@ -80,8 +83,9 @@ func GetNote(c *fiber.Ctx) error {
 	userID := claims["id"].(string)
 
 	id := c.Params("id")
-	err := db.Find(note, "id = ? AND user_id = ?", id, userID).Error
-	if err!=nil {
+
+	// Fetch the note with the id provided in the params
+	if err := db.Find(note, "id = ? AND user_id = ?", id, userID).Error; err!=nil {
 		c.Status(http.StatusInternalServerError).JSON(
 			&fiber.Map{
 				"message" : "getting some issue fetching the notes",
@@ -120,8 +124,7 @@ func UpdateNote(c *fiber.Ctx) error {
 	}
 
 	updateNote := &UpdateNote{}
-	err := c.BodyParser(updateNote)
-	if err != nil {
+	if err := c.BodyParser(updateNote); err != nil {
 		return c.Status(http.StatusUnprocessableEntity).JSON(&fiber.Map{
 			"message" : "Review your intput",
 		})
