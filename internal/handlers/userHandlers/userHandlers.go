@@ -21,6 +21,14 @@ func RegisterUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message":"Invalid input"})
 	}
 
+	if user.Username == ""{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message": "Username is required"})
+	}
+
+	if user.Password == ""{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message": "Password is required"})
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err !=nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"message" : "Failed to hash password"})
@@ -43,6 +51,14 @@ func LoginUser(c *fiber.Ctx) error {
 
 	if err:=c.BodyParser(&input); err != nil{
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message" : "Invalid input"})
+	}
+
+	if input.Username == ""{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message": "Username is required"})
+	}
+
+	if input.Password == ""{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message": "Password is required"})
 	}
 
 	user := new(model.User)
