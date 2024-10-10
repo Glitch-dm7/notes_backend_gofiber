@@ -29,6 +29,11 @@ func RegisterUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message": "Password is required"})
 	}
 
+	existingUser := new(model.User)
+	if err := db.Where("username = ?", user.Username).First(&existingUser).Error; err==nil{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{"message":"User already exists please user other username"})
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err !=nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{"message" : "Failed to hash password"})
